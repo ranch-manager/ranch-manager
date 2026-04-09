@@ -1133,21 +1133,39 @@ setInterval(renderMain,3600000);
 window.buildNav=buildNav;
 window.renderMain=renderMain;
 // 1. 로컬 데이터 즉시 불러오기
-lsLoad();
-// 2. 날짜 표시
-document.getElementById('today-lbl').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-// 3. 즉시 화면 렌더링
-buildNav(); renderMain();
-// 4. Firebase 백그라운드 연결 (실패해도 앱은 이미 동작중)
-try {
-  initFirebase(function(ok){
-    if(ok){
-      var badge=document.getElementById('mode-badge');
-      if(badge){ badge.textContent='온라인'; badge.className='ab-mode online'; }
-      buildNav(); renderMain();
-    }
+// 초기화
+function startLocal(){
+  lsLoad();
+  document.getElementById('today-lbl').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  buildNav();
+  renderMain();
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', function(){
+    startLocal();
+    try{
+      initFirebase(function(ok){
+        if(ok){
+          var badge=document.getElementById('mode-badge');
+          if(badge){badge.textContent='온라인';badge.className='ab-mode online';}
+          buildNav(); renderMain();
+        }
+      });
+    }catch(e){}
   });
-} catch(e) { console.warn('Firebase 초기화 실패, 로컬 모드로 동작'); }
+} else {
+  startLocal();
+  try{
+    initFirebase(function(ok){
+      if(ok){
+        var badge=document.getElementById('mode-badge');
+        if(badge){badge.textContent='온라인';badge.className='ab-mode online';}
+        buildNav(); renderMain();
+      }
+    });
+  }catch(e){}
+}
 })();
 </script>
 </body>
