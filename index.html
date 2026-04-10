@@ -814,6 +814,8 @@ function renderAllCows(el){
       // ── 드래그 이벤트 (전체소목록 → 농장탭) ──
       tr.draggable=true;
       tr.style.cursor='grab';
+      tr.style.userSelect='none';
+      tr.style.webkitUserSelect='none';
       (function(row){
         // PC 드래그
         tr.addEventListener('dragstart',function(e){
@@ -826,6 +828,7 @@ function renderAllCows(el){
           drag.active=false; drag.cowId=null; drag.excelRow=null;
         });
         // 터치 드래그
+        tr.addEventListener('contextmenu',function(e){e.preventDefault();});
         tr.addEventListener('touchstart',function(e){
           var t=e.touches[0];
           drag.startX=t.clientX; drag.startY=t.clientY;
@@ -834,7 +837,7 @@ function renderAllCows(el){
             drag.active=true; tr.style.opacity='.4';
             var ghost=document.getElementById('drag-ghost');
             if(ghost){ghost.textContent=row.id;ghost.style.display='block';ghost.style.left=(t.clientX-40)+'px';ghost.style.top=(t.clientY-25)+'px';}
-          },300);
+          },150);
         },{passive:true});
         tr.addEventListener('touchmove',function(e){
           var t=e.touches[0];
