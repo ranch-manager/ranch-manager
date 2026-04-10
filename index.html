@@ -64,6 +64,7 @@ body{overflow-x:hidden;-webkit-overflow-scrolling:touch;}
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   padding-bottom:8px;
+  scroll-behavior:auto;
 }
 .pen-scroll-wrap::-webkit-scrollbar{height:4px;}
 .pen-scroll-wrap::-webkit-scrollbar-thumb{background:var(--gray-b);border-radius:2px;}
@@ -616,6 +617,18 @@ function attachEv(fid){
       e.preventDefault();
       ghost.style.left=(t.clientX-40)+'px';
       ghost.style.top=(t.clientY-25)+'px';
+      // ── 자동 스크롤 ──
+      var edge=60;
+      // 가로: pen-scroll-wrap 안에서
+      var scrollEl=wrap.querySelector('.pen-scroll-wrap');
+      if(scrollEl){
+        var sr=scrollEl.getBoundingClientRect();
+        if(t.clientX < sr.left+edge) scrollEl.scrollLeft -= 15;
+        else if(t.clientX > sr.right-edge) scrollEl.scrollLeft += 15;
+      }
+      // 세로: 화면 위아래
+      if(t.clientY < edge) window.scrollBy(0,-12);
+      else if(t.clientY > window.innerHeight-edge) window.scrollBy(0,12);
       // 하이라이트
       wrap.querySelectorAll('.pc').forEach(function(c){c.classList.remove('drag-over');});
       ghost.style.display='none';
