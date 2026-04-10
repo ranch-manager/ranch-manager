@@ -75,7 +75,7 @@ body{overflow-x:hidden;-webkit-overflow-scrolling:touch;}
   min-width:max-content;
 }
 .corridor-row{display:flex;gap:5px;}
-.cmid{height:24px;display:flex;align-items:center;justify-content:center;background:var(--gray-l);border-radius:4px;margin:3px 0;font-size:11px;color:var(--t3);letter-spacing:2px;}
+.cmid{width:100%;text-align:center;padding:6px 0;background:var(--gray-l);border-radius:4px;margin:4px 0;font-size:12px;color:var(--t3);letter-spacing:2px;}
 .slbl{font-size:11px;font-weight:600;color:var(--t3);padding:2px 8px;background:var(--gray-l);border-radius:4px;display:inline-block;margin-bottom:3px;}
 
 /* 단일라인: 가로스크롤 한 줄 */
@@ -92,31 +92,31 @@ body{overflow-x:hidden;-webkit-overflow-scrolling:touch;}
   border:1.5px solid var(--gray-b);
   border-radius:var(--rs);
   padding:7px;
-  min-height:80px;
-  width:95px;
+  min-height:60px;
+  width:150px;
   flex-shrink:0;
   transition:border-color .15s,background .15s;
 }
 .pc.drag-over{border-color:var(--blue);background:var(--bl);}
-.plbl{font-size:13px;font-weight:700;color:var(--t3);text-align:center;margin-bottom:6px;}
-.ca{display:flex;flex-direction:column;gap:3px;min-height:28px;}
+.plbl{font-size:13px;font-weight:700;color:var(--t3);text-align:center;margin-bottom:5px;}
+.ca{display:grid;grid-template-columns:1fr 1fr;gap:3px;min-height:28px;}
 
 /* 소 칩 */
-.cc{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;border-radius:10px;padding:6px 4px;font-size:13px;width:68px;min-height:58px;box-sizing:border-box;cursor:pointer;user-select:none;border:1.5px solid transparent;flex-wrap:wrap;touch-action:none;}
+.cc{display:flex;align-items:center;flex-direction:row;gap:3px;border-radius:8px;padding:5px 6px;font-size:12px;width:100%;min-height:32px;box-sizing:border-box;overflow:hidden;cursor:pointer;user-select:none;border:1.5px solid transparent;flex-wrap:wrap;touch-action:none;}
 .cc:active{filter:brightness(.85);}
 .cc.dragging-chip{opacity:.3;}
 .sf{background:var(--gl);color:var(--gd);border-color:var(--green);}
 .sp2{background:var(--rl);color:var(--rd);border-color:var(--red);}
 .so{background:#fff;color:#333;border-color:#aaa;}
 .calf-chip{margin-left:8px;border-style:dashed;opacity:.85;}
-.cid{font-weight:800;font-family:monospace;font-size:13px;text-align:center;line-height:1.2;letter-spacing:0.5px;}
-.cage{font-size:11px;opacity:.75;text-align:center;}
-.cdd{font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;white-space:nowrap;text-align:center;}
+.cid{font-weight:900;font-family:monospace;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;line-height:1;letter-spacing:1px;}
+.cage{font-size:10px;opacity:.65;white-space:nowrap;flex-shrink:0;}
+.cdd{font-size:9px;font-weight:700;padding:1px 3px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
 .du{background:var(--red);color:#fff;}
 .ds{background:var(--orange);color:#fff;}
 .do2{background:var(--green);color:#fff;}
 .dv{background:var(--gray);color:#fff;}
-.edot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.edot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .eon{background:var(--red);box-shadow:0 0 4px rgba(192,57,43,.8);}
 .eoff{background:transparent;border:1px solid #ccc;}
 .tdot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0;}
@@ -466,6 +466,16 @@ function sc(n,l,c){return '<div class="sc"><div class="sn"'+(c?' style="color:'+
 
 function renderMain(){
   var el=document.getElementById('main');
+  // 칩 클릭 이벤트 위임 (한번만 등록)
+  if(!el._ccBound){
+    el._ccBound=true;
+    el.addEventListener('click',function(e){
+      var cc=e.target.closest('.cc');
+      if(cc&&cc.dataset.cow&&cc.dataset.farm){
+        openEdit(cc.dataset.cow,cc.dataset.farm);
+      }
+    });
+  }
   if(activeFarm==='farm0'){renderOV(el);return;}
   if(activeFarm==='all'){renderAllCows(el);return;}
   var fid=activeFarm,d=state[fid];
@@ -547,13 +557,12 @@ function cowC(c,fid){
   var trt=c.treated?'<span class="tdot"></span>':'';
   var f=fid||c._farm||'';
   var age=c.dob?calcAge(c.dob):(c.age||0);
-  return '<div class="cc '+(c.status==='fattening'?'sf':c.status==='pregnant'?'sp2':'so')+(c.parentId?' calf-chip':'')+'" data-cow="'+c.id+'" data-farm="'+f+'" onclick="openEdit(\''+c.id+'\',\''+f+'\')">'+
-    (function(){
-  var num=c.id.length>=5?c.id.slice(-5):c.id;
-  var main=num.length>=2?num.slice(0,-1):num;
-  var last=num.length>=2?num.slice(-1):'';
-  return '<span class="cid">'+(c.parentId?'↳':'')+main+' '+last+'</span>';
-})()+
+  var cid5=c.id.length>=5?c.id.slice(-5):c.id;
+  var cidMain=cid5.length>=2?cid5.slice(0,-1):'';
+  var cidLast=cid5.length>=2?' '+cid5.slice(-1):cid5;
+  var cidStr=(c.parentId?'↳':'')+cidMain+cidLast;
+  return '<div class="cc '+(c.status==='fattening'?'sf':c.status==='pregnant'?'sp2':'so')+(c.parentId?' calf-chip':'')+'" data-cow="'+c.id+'" data-farm="'+f+'">'+
+    '<span class="cid">'+cidStr+'</span>'+
     '<span class="cage">'+age+'개월</span>'+
     dd+est+trt+'</div>';
 }
@@ -710,6 +719,13 @@ function rList(fid){
       '<td style="font-size:11px">'+ddH+'</td></tr>';
   }).join('');
   el.innerHTML='<div style="overflow-x:auto"><table class="ct"><thead><tr><th>개체번호</th><th>성별</th><th>출생일</th><th>나이</th><th>사육칸</th><th>상태</th><th>출산예정</th></tr></thead><tbody>'+(rows||'<tr><td colspan=7 style="text-align:center;padding:20px;color:var(--t3)">개체 없음</td></tr>')+'</tbody></table></div>';
+
+  // 검색창 이벤트 등록
+  var sinput=document.getElementById('list-search-'+fid);
+  if(sinput&&!sinput._bound){
+    sinput._bound=true;
+    sinput.addEventListener('input',function(){rList(fid);});
+  }
 }
 
 function rAlert(fid){
