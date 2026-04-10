@@ -437,7 +437,7 @@ function buildNav(){
             for(var i=0;i<pens.length;i++){
               if((penCounts[pens[i].id]||0)<6){targetPen=pens[i];break;}
             }
-            showFarmDropModal(drag.cowId,fid,targetPen.id,farm.name);
+            showFarmDropModal(drag.cowId,fid,targetPen.id,farm.name,drag.excelRow||null);
           }
         });
         // 터치 드래그도 지원
@@ -451,7 +451,7 @@ function buildNav(){
             for(var i=0;i<pens.length;i++){
               if((penCounts[pens[i].id]||0)<6){targetPen=pens[i];break;}
             }
-            showFarmDropModal(drag.cowId,fid,targetPen.id,farm.name);
+            showFarmDropModal(drag.cowId,fid,targetPen.id,farm.name,drag.excelRow||null);
             e.stopPropagation();
           }
         });
@@ -1543,11 +1543,17 @@ window.showFarmDropModal=function(cowId, toFid, defaultPenId, farmName, excelRow
     if(!cow){var found=state[f].cows.find(function(c){return c.id===cowId;});if(found)cow=found;}
   });
   if(!cow&&excelRow){
-    // 엑셀 데이터로 새 소 생성 (아직 미등록)
     isNew=true;
     cow={id:excelRow.id,dob:excelRow.dob,sex:excelRow.sex,semen:excelRow.semen||'',motherKpn:excelRow.mother||''};
   }
-  if(!cow)return;
+  if(!cow){
+    // EXCEL_DATA에서도 찾기
+    if(typeof EXCEL_DATA!=='undefined'){
+      var found2=EXCEL_DATA.find(function(r){return r.id===cowId;});
+      if(found2){isNew=true;cow={id:found2.id,dob:found2.dob,sex:found2.sex,semen:found2.semen||'',motherKpn:found2.mother||''};}
+    }
+  }
+  if(!cow){showToast('개체 정보를 찾을 수 없어요');return;}
 
   var modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;';
