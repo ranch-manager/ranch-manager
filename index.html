@@ -102,16 +102,16 @@ body{overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 .ca{display:flex;flex-direction:column;gap:3px;min-height:28px;}
 
 /* 소 칩 */
-.cc{display:flex;align-items:center;gap:3px;border-radius:10px;padding:5px 7px;font-size:12px;cursor:pointer;user-select:none;border:1.5px solid transparent;flex-wrap:wrap;touch-action:none;}
+.cc{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;border-radius:10px;padding:5px 4px;font-size:12px;width:62px;min-height:52px;box-sizing:border-box;cursor:pointer;user-select:none;border:1.5px solid transparent;flex-wrap:wrap;touch-action:none;}
 .cc:active{filter:brightness(.85);}
 .cc.dragging-chip{opacity:.3;}
 .sf{background:var(--gl);color:var(--gd);border-color:var(--green);}
 .sp2{background:var(--rl);color:var(--rd);border-color:var(--red);}
 .so{background:#fff;color:#333;border-color:#aaa;}
 .calf-chip{margin-left:8px;border-style:dashed;opacity:.85;}
-.cid{font-weight:700;font-family:monospace;font-size:12px;}
-.cage{font-size:11px;opacity:.75;}
-.cdd{font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;white-space:nowrap;}
+.cid{font-weight:700;font-family:monospace;font-size:11px;text-align:center;line-height:1.2;}
+.cage{font-size:10px;opacity:.75;text-align:center;}
+.cdd{font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;white-space:nowrap;text-align:center;}
 .du{background:var(--red);color:#fff;}
 .ds{background:var(--orange);color:#fff;}
 .do2{background:var(--green);color:#fff;}
@@ -548,7 +548,12 @@ function cowC(c,fid){
   var f=fid||c._farm||'';
   var age=c.dob?calcAge(c.dob):(c.age||0);
   return '<div class="cc '+(c.status==='fattening'?'sf':c.status==='pregnant'?'sp2':'so')+(c.parentId?' calf-chip':'')+'" data-cow="'+c.id+'" data-farm="'+f+'" onclick="openEdit(\''+c.id+'\',\''+f+'\')">'+
-    '<span class="cid">'+(c.parentId?'↳':'')+(c.id.length>4?c.id.slice(-4):c.id)+'</span>'+
+    (function(){
+  var num=c.id.length>=5?c.id.slice(-5):c.id;
+  var main=num.length>=2?num.slice(0,-1):num;
+  var last=num.length>=2?num.slice(-1):'';
+  return '<span class="cid">'+(c.parentId?'↳':'')+main+'<span style="font-size:13px;font-weight:900;color:#111"> '+last+'</span></span>';
+})()+
     '<span class="cage">'+age+'개월</span>'+
     dd+est+trt+'</div>';
 }
@@ -888,6 +893,36 @@ function renderOV(el){
     var ov=d.cows.filter(function(c){return c.status==='pregnant'&&c.birthdate&&!c.delivered&&cd(c.birthdate)<0;}).length;
     var es=d.cows.filter(function(c){return c.status==='open'&&c.estrus;}).length;
     var card=document.createElement('div');card.className='oc';
+    // 출산임박 D-day 목록 (30일 이내, 미처리)
+    var ddayList=d.cows.filter(function(c){
+      return c.status==='pregnant'&&c.birthdate&&!c.delivered&&cd(c.birthdate)!==null&&cd(c.birthdate)<=30;
+    }).map(function(c){
+      return {id:c.id,dd:cd(c.birthdate),penId:c.penId};
+    }).sort(function(a,b){return a.dd-b.dd;});
+
+    var ddayHtml='';
+    if(ddayList.length){
+      ddayHtml='<div style="margin:8px 0 4px;padding:6px 8px;background:#fff8f8;border-radius:6px;border-left:3px solid var(--red)">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🍼 출산임박 '+ddayList.length+'마리</div>'+
+        ddayList.slice(0,5).map(function(c){
+          var pen=d.pens.find(function(p){return p.id===c.penId;});
+          var tag=c.dd<0
+            ?'<span style="background:var(--gray);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px">D+'+Math.abs(c.dd)+'</span>'
+            :c.dd===0
+            ?'<span style="background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px">D-Day</span>'
+            :c.dd<=7
+            ?'<span style="background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px">D-'+c.dd+'</span>'
+            :'<span style="background:var(--orange);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px">D-'+c.dd+'</span>';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0;font-size:11px;">'+
+            '<span style="font-family:monospace;color:var(--text)">'+c.id.slice(-4)+'</span>'+
+            '<span style="color:var(--t3);font-size:10px">'+(pen?pen.name:'')+'</span>'+
+            tag+
+          '</div>';
+        }).join('')+
+        (ddayList.length>5?'<div style="font-size:10px;color:var(--t3);text-align:right">외 '+(ddayList.length-5)+'마리...</div>':'')+
+      '</div>';
+    }
+
     card.innerHTML=
       '<div class="on" style="color:'+farm.color+'">'+farm.name+'</div>'+
       '<div class="or"><span>전체</span><span class="ov2">'+d.cows.filter(function(c){return !c.parentId;}).length+'마리</span></div>'+
@@ -896,6 +931,7 @@ function renderOV(el){
       '<div class="or"><span>공태</span><span class="ov2">'+d.cows.filter(function(c){return c.status==='open';}).length+'</span></div>'+
       (es?'<div class="or"><span>발정중</span><span class="ov2 ow">'+es+'마리</span></div>':'')+
       (ov?'<div class="or"><span>⚠ 출산미처리</span><span class="ov2 ow">'+ov+'마리</span></div>':'')+
+      ddayHtml+
       '<button class="goto-btn" style="margin-top:10px;width:100%;padding:8px;background:'+farm.color+';color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font)">바로가기</button>';
     (function(id){card.querySelector('.goto-btn').addEventListener('click',function(){activeFarm=id;buildNav();renderMain();});})(fid);
     grid.appendChild(card);
